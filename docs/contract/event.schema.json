@@ -1,0 +1,248 @@
+{
+  "$defs": {
+    "Action": {
+      "enum": [
+        "ALLOW",
+        "FLAG",
+        "PAUSE"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "Decision": {
+      "additionalProperties": false,
+      "properties": {
+        "approve": {
+          "title": "Approve",
+          "type": "boolean"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/DecisionSource"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approve",
+        "reason",
+        "source",
+        "ts"
+      ],
+      "title": "Decision",
+      "type": "object"
+    },
+    "DecisionSource": {
+      "enum": [
+        "human",
+        "timeout"
+      ],
+      "title": "DecisionSource",
+      "type": "string"
+    },
+    "Explanation": {
+      "additionalProperties": false,
+      "description": "Advisory output of the Claude judge. It never changes risk or action.",
+      "properties": {
+        "verdict": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "explanation": {
+          "title": "Explanation",
+          "type": "string"
+        },
+        "what_to_check": {
+          "title": "What To Check",
+          "type": "string"
+        }
+      },
+      "required": [
+        "verdict",
+        "explanation",
+        "what_to_check"
+      ],
+      "title": "Explanation",
+      "type": "object"
+    },
+    "RuleId": {
+      "enum": [
+        "sensitive_read",
+        "unknown_destination",
+        "destructive_outside_tmp",
+        "honeytoken"
+      ],
+      "title": "RuleId",
+      "type": "string"
+    },
+    "Signals": {
+      "additionalProperties": false,
+      "properties": {
+        "rules": {
+          "items": {
+            "$ref": "#/$defs/RuleId"
+          },
+          "title": "Rules",
+          "type": "array"
+        },
+        "taint": {
+          "default": false,
+          "title": "Taint",
+          "type": "boolean"
+        },
+        "ml_risk": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Ml Risk",
+          "type": "number"
+        },
+        "markov_risk": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Markov Risk",
+          "type": "number"
+        }
+      },
+      "title": "Signals",
+      "type": "object"
+    },
+    "ToolName": {
+      "enum": [
+        "read_file",
+        "write_file",
+        "delete_file",
+        "list_dir",
+        "fetch_url",
+        "send_email",
+        "http_post"
+      ],
+      "title": "ToolName",
+      "type": "string"
+    },
+    "ToolResult": {
+      "additionalProperties": false,
+      "properties": {
+        "ok": {
+          "title": "Ok",
+          "type": "boolean"
+        },
+        "preview": {
+          "maxLength": 200,
+          "title": "Preview",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ok",
+        "preview"
+      ],
+      "title": "ToolResult",
+      "type": "object"
+    },
+    "Verdict": {
+      "enum": [
+        "benign",
+        "suspicious",
+        "malicious"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "pattern": "^evt_[A-Za-z0-9]+$",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "session_id": {
+      "pattern": "^s_[A-Za-z0-9]+$",
+      "title": "Session Id",
+      "type": "string"
+    },
+    "step": {
+      "minimum": 0,
+      "title": "Step",
+      "type": "integer"
+    },
+    "ts": {
+      "format": "date-time",
+      "title": "Ts",
+      "type": "string"
+    },
+    "tool": {
+      "$ref": "#/$defs/ToolName"
+    },
+    "args": {
+      "additionalProperties": true,
+      "title": "Args",
+      "type": "object"
+    },
+    "signals": {
+      "$ref": "#/$defs/Signals"
+    },
+    "risk": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Risk",
+      "type": "number"
+    },
+    "action": {
+      "$ref": "#/$defs/Action"
+    },
+    "explanation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Explanation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "decision": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Decision"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ToolResult"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "event_id",
+    "session_id",
+    "step",
+    "ts",
+    "tool",
+    "args",
+    "signals",
+    "risk",
+    "action"
+  ],
+  "title": "SentinelEvent",
+  "type": "object"
+}
