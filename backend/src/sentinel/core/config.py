@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     # Keep below the agent's 120 s gateway timeout (agent/executors.py).
     decision_timeout_seconds: float = Field(default=90.0, gt=0, lt=120)
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
+    # Outbound destinations (email domains, POST hosts) that are not "unknown". Subdomains match.
+    sentinel_allowed_domains: Annotated[list[str], NoDecode] = ["ourcompany.be"]
 
     sandbox_dir: Path = REPO_ROOT / "sandbox"
 
@@ -57,7 +59,7 @@ class Settings(BaseSettings):
     def sentinel_base_url(self) -> str:
         return f"http://{self.sentinel_host}:{self.sentinel_port}"
 
-    @field_validator("cors_origins", mode="before")
+    @field_validator("cors_origins", "sentinel_allowed_domains", mode="before")
     @classmethod
     def split_comma_separated(cls, value: object) -> object:
         if isinstance(value, str):

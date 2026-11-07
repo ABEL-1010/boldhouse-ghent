@@ -37,6 +37,10 @@ class ToolService:
         self._fetch_base_url = fetch_base_url
         self._http_transport = http_transport
 
+    @property
+    def workspace(self) -> Path:
+        return self._workspace
+
     @classmethod
     def from_settings(cls, settings: Settings) -> Self:
         return cls(settings.runtime_workspace, settings.outbox_path, settings.fake_web_base_url)

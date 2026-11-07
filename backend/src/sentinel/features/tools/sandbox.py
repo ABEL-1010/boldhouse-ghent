@@ -21,3 +21,11 @@ def resolve_in_workspace(workspace: Path, path: str) -> Path:
 def display_path(workspace: Path, resolved: Path) -> str:
     relative = resolved.relative_to(workspace.resolve()).as_posix()
     return relative or "."
+
+
+def file_exists_in_workspace(workspace: Path, path: str) -> bool:
+    """True if `path` is an existing file inside the workspace; False for anything outside."""
+    try:
+        return resolve_in_workspace(workspace, path).is_file()
+    except SandboxViolation:
+        return False

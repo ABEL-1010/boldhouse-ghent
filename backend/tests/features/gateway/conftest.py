@@ -21,9 +21,12 @@ class RuleScorer:
     def __init__(self, pause: set[str] | None = None) -> None:
         self.pause = pause or set()
         self.calls: list[ScoringInput] = []
+        # (steps_so_far, sensitive_reads) at scoring time; the context object itself mutates.
+        self.context_seen: list[tuple[int, int]] = []
 
     def score(self, call: ScoringInput) -> Score:
         self.calls.append(call)
+        self.context_seen.append((call.context.steps_so_far, call.context.sensitive_reads))
         if call.tool in self.pause:
             return Score(Signals(taint=True, ml_risk=0.97), risk=1.0, action=Action.PAUSE)
         return Score(Signals(), risk=0.0, action=Action.ALLOW)

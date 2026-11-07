@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sentinel import __version__
 from sentinel.core.config import Settings, get_settings
 from sentinel.core.logging import configure_logging
-from sentinel.features import events, gateway, health
+from sentinel.features import detection, events, gateway, health
 from sentinel.features.tools import ToolService, ensure_sandbox
 
 logger = logging.getLogger("sentinel")
@@ -40,12 +40,15 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    tool_service = tools or ToolService.from_settings(settings)
+    allowed_domains = frozenset(d.lower() for d in settings.sentinel_allowed_domains)
     app.state.event_bus = bus
     app.state.gateway = gateway.GatewayService(
-        tools=tools or ToolService.from_settings(settings),
+        tools=tool_service,
         scorer=scorer or gateway.UnscoredScorer(),
         bus=bus,
         decision_timeout_seconds=settings.decision_timeout_seconds,
+        new_context=lambda: detection.SessionContext(tool_service.workspace, allowed_domains),
     )
     app.include_router(health.router)
     app.include_router(gateway.router)

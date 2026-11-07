@@ -1,7 +1,9 @@
 import asyncio
 import itertools
+from collections.abc import Callable
 from datetime import UTC, datetime
 
+from sentinel.features.detection import SessionContext
 from sentinel.features.events import (
     Action,
     Decision,
@@ -39,6 +41,7 @@ class GatewayService:
         scorer: Scorer,
         bus: EventBus,
         decision_timeout_seconds: float,
+        new_context: Callable[[], SessionContext],
     ) -> None:
         self._tools = tools
         self._scorer = scorer
@@ -46,13 +49,14 @@ class GatewayService:
         self._decision_timeout = decision_timeout_seconds
         self._decisions = PendingDecisions()
         self._event_numbers = itertools.count(1)
-        self._steps: dict[str, int] = {}
+        self._new_context = new_context
+        self._contexts: dict[str, SessionContext] = {}
 
     async def handle(self, request: ToolRequest) -> ToolResponse:
-        step = self._steps.get(request.session_id, 0) + 1
-        self._steps[request.session_id] = step
+        context = self._contexts.setdefault(request.session_id, self._new_context())
+        step = context.steps_so_far + 1
         score = self._scorer.score(
-            ScoringInput(request.session_id, step, request.tool, dict(request.args))
+            ScoringInput(request.session_id, step, request.tool, dict(request.args), context)
         )
         event = SentinelEvent(
             event_id=f"evt_{next(self._event_numbers):04d}",
@@ -113,6 +117,7 @@ class GatewayService:
             raise
 
     def _complete(self, event: SentinelEvent, *, ok: bool, content: str) -> None:
+        self._contexts[event.session_id].observe(event.tool, event.args, ok=ok)
         result = ToolResult(ok=ok, preview=content[:PREVIEW_CHARS])
         self._update(event, StreamEventType.COMPLETED, result=result)
 

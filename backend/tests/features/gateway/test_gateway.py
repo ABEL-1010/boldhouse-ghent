@@ -196,3 +196,20 @@ async def test_agent_disconnect_while_paused_is_recorded_as_deny(
     assert final.decision is not None and "disconnected" in final.decision.reason
     assert final.result is not None and final.result.ok is False
     assert outbox.read_text() == ""
+
+
+@pytest.mark.anyio
+async def test_scorer_sees_session_context_before_each_call(
+    client: httpx.AsyncClient, scorer: RuleScorer
+) -> None:
+    await client.post("/tool", json=tool_call("read_file", path=".env"))
+    await client.post("/tool", json=tool_call("read_file", path="notes.md"))
+    await client.post("/tool", json=tool_call("list_dir", session="s_other"))
+    pending = asyncio.create_task(client.post("/tool", json=tool_call("send_email", **EMAIL)))
+    event_id = await wait_for_pause(client)
+    await client.post(f"/decision/{event_id}", json={"approve": False, "reason": "No."})
+    await pending
+
+    # The .env read counts only once it has succeeded; each session has its own context.
+    assert scorer.context_seen == [(0, 0), (1, 1), (0, 0), (2, 1)]
+    assert [c.step for c in scorer.calls] == [1, 2, 1, 3]

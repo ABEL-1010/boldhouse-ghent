@@ -11,8 +11,8 @@ log and streams live to a dashboard.
 Built in one day at the Boldhouse hackathon. The full plan is in
 [docs/Sentinel_Roadmap.md](docs/Sentinel_Roadmap.md), and progress per step is in [docs/progress/](docs/progress/).
 
-> **Status:** event contract, sandbox, tools, agent loop and gateway (PAUSE, human decision,
-> SSE) are done. Detection is not wired yet: every call is ALLOWed at risk 0 for now.
+> **Status:** event contract, sandbox, tools, agent loop, gateway (PAUSE, human decision, SSE)
+> and feature extraction are done. Scoring is not wired yet: every call is ALLOWed at risk 0 for now.
 > See [docs/progress/](docs/progress/).
 
 ## Repository layout

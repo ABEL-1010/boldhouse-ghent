@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from sentinel.features.detection import SessionContext
 from sentinel.features.events import Action, Signals, ToolName
 
 logger = logging.getLogger("sentinel.gateway")
@@ -15,6 +16,8 @@ class ScoringInput:
     step: int
     tool: ToolName
     args: dict[str, Any]
+    # State *before* this call; detection reads it, only the gateway updates it.
+    context: SessionContext
 
 
 @dataclass(frozen=True)
