@@ -23,6 +23,7 @@ from sentinel.features.detection import (
     DetectionModel,
     MarkovModel,
     combine,
+    indicator_support,
     token_from_features,
 )
 from sentinel.features.events import Action, ToolName
@@ -80,6 +81,7 @@ def train(records: list[TraceRecord]) -> DetectionModel:
         markov=markov,
         markov_reference=markov_reference,
         feature_names=FEATURE_NAMES,
+        seen_indicators=indicator_support([r.features for r in train_set], FEATURE_NAMES),
         info={
             "summary": f"{len(train_set)} train / {len(holdout)} holdout calls, "
             f"{sessions} sessions",

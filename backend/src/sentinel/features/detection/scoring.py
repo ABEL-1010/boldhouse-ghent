@@ -97,14 +97,16 @@ class SentinelScorer:
         )
         rules = evaluate_rules(call.tool, call.args, features, taint)
         ml_risk = markov_risk = 0.0
+        unseen: list[str] = []
         if self._model is not None:
+            unseen = self._model.out_of_support(features)
             ml_risk = round(self._model.ml_risk(features), 2)
             token = token_from_features(call.tool, features)
             markov_risk = round(self._model.markov_risk(ctx.last_token, token), 2)
         risk, action = combine(rules, taint.tainted, ml_risk, markov_risk)
         if action is not Action.ALLOW:
             logger.info(
-                "%s %s step %d: %s risk=%.2f rules=%s taint=%s ml=%.2f markov=%.2f",
+                "%s %s step %d: %s risk=%.2f rules=%s taint=%s ml=%.2f markov=%.2f unseen=%s",
                 call.session_id,
                 call.tool.value,
                 call.step,
@@ -114,6 +116,7 @@ class SentinelScorer:
                 list(taint.evidence),
                 ml_risk,
                 markov_risk,
+                unseen,
             )
         return Score(
             signals=Signals(
