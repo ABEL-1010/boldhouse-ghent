@@ -1,7 +1,7 @@
 from typing import Any
 
 import pytest
-from anthropic.types import Message
+from anthropic.types import Message, RefusalStopDetails
 
 from agent import AgentRun, ToolCall, run_agent
 from sentinel.features.tools import ToolOutcome
@@ -185,3 +185,17 @@ async def test_pause_turn_is_resumed() -> None:
 
     assert result.stop_reason == "end_turn"
     assert len(client.messages.requests) == 2
+
+
+@pytest.mark.anyio
+async def test_refusal_details_are_kept() -> None:
+    refused = message("refusal").model_copy(
+        update={
+            "stop_details": RefusalStopDetails(type="refusal", category="cyber", explanation="x")
+        }
+    )
+
+    result = await run(FakeClient(refused), FakeExecutor())
+
+    assert result.stop_reason == "refusal"
+    assert result.refusal == "cyber: x"

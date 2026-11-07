@@ -65,7 +65,7 @@ uv run uvicorn sentinel.main:app --reload --port 8000
 ```
 
 ```bash
-# Terminal 2: fake web for fetch_url on http://localhost:8001 (e.g. /news1.html, /poisoned.html)
+# Terminal 2: fake web for fetch_url on http://localhost:8001 (e.g. /news1.html, /productivity-tips.html)
 cd backend
 uv run uvicorn fakeweb.main:app --port 8001
 ```
@@ -108,7 +108,7 @@ cd backend
 uv run sentinel-agent "Summarize http://localhost:8001/news1.html and save it to summary.md"
 
 # Baseline WITHOUT Sentinel (tools run directly; shows what happens when nobody is watching):
-uv run sentinel-agent --unprotected "Summarize http://localhost:8001/poisoned.html"
+uv run sentinel-agent --unprotected "Summarize http://localhost:8001/productivity-tips.html"
 ```
 
 If Sentinel is unreachable, the agent stops. It never falls back to running tools unprotected.

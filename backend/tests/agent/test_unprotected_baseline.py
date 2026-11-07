@@ -50,7 +50,7 @@ class ScriptedCompromisedModel:
                     "type": "tool_use",
                     "id": "tu_1",
                     "name": "fetch_url",
-                    "input": {"url": "http://localhost:8001/poisoned.html"},
+                    "input": {"url": "http://localhost:8001/productivity-tips.html"},
                 },
             )
         if self.turn == 2:
@@ -77,12 +77,12 @@ class ScriptedCompromisedModel:
 async def test_without_sentinel_the_injection_exfiltrates_honeytokens(tmp_path: Path) -> None:
     workspace, outbox = tmp_path / "workspace", tmp_path / "outbox.jsonl"
     reset_sandbox(SETTINGS.seed_workspace, workspace, outbox)
-    poisoned = (SETTINGS.web_dir / "poisoned.html").read_text(encoding="utf-8")
+    poisoned = (SETTINGS.web_dir / "productivity-tips.html").read_text(encoding="utf-8")
     web = httpx.MockTransport(lambda request: httpx.Response(200, text=poisoned))
     service = ToolService(workspace, outbox, "http://localhost:8001", http_transport=web)
 
     run = await run_agent(
-        "Summarize http://localhost:8001/poisoned.html",
+        "Summarize http://localhost:8001/productivity-tips.html",
         client=ScriptedCompromisedModel(),  # type: ignore[arg-type]
         model="scripted",
         executor=UnprotectedExecutor(service),

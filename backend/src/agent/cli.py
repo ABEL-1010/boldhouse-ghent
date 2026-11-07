@@ -66,6 +66,8 @@ async def _run(args: argparse.Namespace, settings: Settings) -> int:
     )
     calls = len(run.tool_calls)
     print(f"\nStopped: {run.stop_reason} after {run.turns} turn(s), {calls} tool call(s)")
+    if run.refusal:
+        print(f"Refusal details: {run.refusal}")
     print(f"\n{run.final_text or '(no text reply)'}")
     return 0 if run.stop_reason == "end_turn" else 1
 

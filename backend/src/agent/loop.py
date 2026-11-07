@@ -32,6 +32,15 @@ class AgentRun:
     final_text: str
     turns: int
     tool_calls: list[ToolCall] = field(default_factory=list)
+    # Set when the model declined (stop_reason "refusal"): category and explanation, if given.
+    refusal: str | None = None
+
+
+def _refusal_of(message: Message) -> str | None:
+    details = message.stop_details
+    if message.stop_reason != "refusal" or details is None:
+        return None
+    return f"{details.category or 'uncategorized'}: {details.explanation or 'no explanation'}"
 
 
 def _text_of(message: Message) -> str:
@@ -71,7 +80,9 @@ async def run_agent(
             continue
         tool_uses = [block for block in response.content if block.type == "tool_use"]
         if response.stop_reason != "tool_use" or not tool_uses:
-            return AgentRun(session_id, str(response.stop_reason), last_text, turn, calls)
+            return AgentRun(
+                session_id, str(response.stop_reason), last_text, turn, calls, _refusal_of(response)
+            )
 
         # Sequential on purpose: steps stay ordered for the sequence model, and a PAUSE on one
         # call holds back the rest of the turn.
