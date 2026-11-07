@@ -47,11 +47,13 @@ def test_exists_is_sandboxed(ctx: SessionContext) -> None:
 
 
 def test_observe_counts_steps_and_successful_sensitive_reads(ctx: SessionContext) -> None:
-    ctx.observe(ToolName.LIST_DIR, {}, ok=True)
-    ctx.observe(ToolName.READ_FILE, {"path": ".env"}, ok=False)  # failed: no data was exposed
-    ctx.observe(ToolName.READ_FILE, {"path": "notes.md"}, ok=True)
-    ctx.observe(ToolName.READ_FILE, {"path": ".env"}, ok=True)
-    ctx.observe(ToolName.WRITE_FILE, {"path": "api_key.txt", "content": "x"}, ok=True)
+    ctx.observe(ToolName.LIST_DIR, {}, ok=True, content="")
+    ctx.observe(
+        ToolName.READ_FILE, {"path": ".env"}, ok=False, content=""
+    )  # failed: no data was exposed
+    ctx.observe(ToolName.READ_FILE, {"path": "notes.md"}, ok=True, content="")
+    ctx.observe(ToolName.READ_FILE, {"path": ".env"}, ok=True, content="")
+    ctx.observe(ToolName.WRITE_FILE, {"path": "api_key.txt", "content": "x"}, ok=True, content="")
 
     assert ctx.steps_so_far == 5
     assert ctx.sensitive_reads == 1

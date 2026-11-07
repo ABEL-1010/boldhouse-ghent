@@ -117,7 +117,7 @@ def test_outbound_after_sensitive_read(ctx: SessionContext) -> None:
     email = {"to": "team@ourcompany.be", "subject": "s", "body": "b"}
     before = extract_features(ToolName.SEND_EMAIL, email, ctx)
 
-    ctx.observe(ToolName.READ_FILE, {"path": ".env"}, ok=True)
+    ctx.observe(ToolName.READ_FILE, {"path": ".env"}, ok=True, content="")
     after = extract_features(ToolName.SEND_EMAIL, email, ctx)
     read_after = extract_features(ToolName.READ_FILE, {"path": "notes.md"}, ctx)
 

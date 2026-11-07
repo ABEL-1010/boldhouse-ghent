@@ -17,7 +17,7 @@ logger = logging.getLogger("sentinel")
 def create_app(
     settings: Settings | None = None,
     *,
-    scorer: gateway.Scorer | None = None,
+    scorer: detection.Scorer | None = None,
     tools: ToolService | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
@@ -45,7 +45,8 @@ def create_app(
     app.state.event_bus = bus
     app.state.gateway = gateway.GatewayService(
         tools=tool_service,
-        scorer=scorer or gateway.UnscoredScorer(),
+        scorer=scorer
+        or detection.RulesScorer(detection.load_honeytokens(settings.honeytokens_path)),
         bus=bus,
         decision_timeout_seconds=settings.decision_timeout_seconds,
         new_context=lambda: detection.SessionContext(tool_service.workspace, allowed_domains),

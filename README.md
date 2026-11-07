@@ -11,8 +11,8 @@ log and streams live to a dashboard.
 Built in one day at the Boldhouse hackathon. The full plan is in
 [docs/Sentinel_Roadmap.md](docs/Sentinel_Roadmap.md), and progress per step is in [docs/progress/](docs/progress/).
 
-> **Status:** event contract, sandbox, tools, agent loop, gateway (PAUSE, human decision, SSE)
-> and feature extraction are done. Scoring is not wired yet: every call is ALLOWed at risk 0 for now.
+> **Status:** Milestone 1 reached. The agent goes through Sentinel, and policy rules + taint tracking +
+> honeytokens score every call (FLAG / PAUSE with a human decision). The ML layers come next.
 > See [docs/progress/](docs/progress/).
 
 ## Repository layout

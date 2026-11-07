@@ -7,8 +7,8 @@ import pytest
 from fastapi import FastAPI
 
 from sentinel.core.config import Settings
+from sentinel.features.detection import Score, ScoringInput
 from sentinel.features.events import Action, EventBus, Signals, StreamEventType
-from sentinel.features.gateway import Score, ScoringInput
 from sentinel.features.tools import ToolService, reset_sandbox
 from sentinel.main import create_app
 

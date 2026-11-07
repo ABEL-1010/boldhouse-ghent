@@ -1,9 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
 from sentinel.features.detection.patterns import SENSITIVE_TARGET
+from sentinel.features.detection.taint import taint_from_content
 from sentinel.features.events import ToolName
 from sentinel.features.tools import file_exists_in_workspace
 
@@ -32,6 +33,8 @@ class SessionContext:
     allowed_domains: frozenset[str]
     steps_so_far: int = 0
     sensitive_reads: int = 0
+    tainted_lines: set[str] = field(default_factory=set)
+    secret_fragments: set[str] = field(default_factory=set)
 
     def is_allowlisted(self, target: str) -> bool:
         domain = destination_domain(target)
@@ -42,8 +45,11 @@ class SessionContext:
     def exists(self, path: str) -> bool:
         return file_exists_in_workspace(self.workspace, path)
 
-    def observe(self, tool: ToolName, args: dict[str, Any], *, ok: bool) -> None:
+    def observe(self, tool: ToolName, args: dict[str, Any], *, ok: bool, content: str) -> None:
         """Record a finished call. Only a successful sensitive read counts: no data, no risk."""
         self.steps_so_far += 1
         if tool is ToolName.READ_FILE and ok and SENSITIVE_TARGET.search(call_target(args)):
             self.sensitive_reads += 1
+            lines, fragments = taint_from_content(content)
+            self.tainted_lines |= lines
+            self.secret_fragments |= fragments

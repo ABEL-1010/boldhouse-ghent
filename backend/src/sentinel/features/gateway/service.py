@@ -3,7 +3,7 @@ import itertools
 from collections.abc import Callable
 from datetime import UTC, datetime
 
-from sentinel.features.detection import SessionContext
+from sentinel.features.detection import Scorer, ScoringInput, SessionContext
 from sentinel.features.events import (
     Action,
     Decision,
@@ -20,7 +20,6 @@ from sentinel.features.gateway.schemas import (
     ToolRequest,
     ToolResponse,
 )
-from sentinel.features.gateway.scoring import Scorer, ScoringInput
 from sentinel.features.tools import ToolService
 
 PREVIEW_CHARS = 200
@@ -117,7 +116,7 @@ class GatewayService:
             raise
 
     def _complete(self, event: SentinelEvent, *, ok: bool, content: str) -> None:
-        self._contexts[event.session_id].observe(event.tool, event.args, ok=ok)
+        self._contexts[event.session_id].observe(event.tool, event.args, ok=ok, content=content)
         result = ToolResult(ok=ok, preview=content[:PREVIEW_CHARS])
         self._update(event, StreamEventType.COMPLETED, result=result)
 

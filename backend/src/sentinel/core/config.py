@@ -48,6 +48,11 @@ class Settings(BaseSettings):
         return self.sandbox_dir / ".runtime" / "outbox.jsonl"
 
     @property
+    def honeytokens_path(self) -> Path:
+        """Kept outside the workspace, so the agent can never read the list."""
+        return self.sandbox_dir / "honeytokens.txt"
+
+    @property
     def web_dir(self) -> Path:
         return self.sandbox_dir / "web"
 
