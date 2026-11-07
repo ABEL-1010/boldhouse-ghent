@@ -48,6 +48,11 @@ class Settings(BaseSettings):
         return self.sandbox_dir / ".runtime" / "outbox.jsonl"
 
     @property
+    def traces_path(self) -> Path:
+        """Benign training traces (gitignored; regenerate with `uv run sentinel-traces`)."""
+        return REPO_ROOT / "models" / "traces.jsonl"
+
+    @property
     def honeytokens_path(self) -> Path:
         """Kept outside the workspace, so the agent can never read the list."""
         return self.sandbox_dir / "honeytokens.txt"
