@@ -15,6 +15,14 @@ def reset_sandbox(seed_workspace: Path, runtime_workspace: Path, outbox_path: Pa
     outbox_path.write_text("", encoding="utf-8")
 
 
+def ensure_sandbox(seed_workspace: Path, runtime_workspace: Path, outbox_path: Path) -> bool:
+    """Create the runtime sandbox only if it is missing; never wipe an existing one."""
+    if runtime_workspace.is_dir():
+        return False
+    reset_sandbox(seed_workspace, runtime_workspace, outbox_path)
+    return True
+
+
 def main() -> None:
     settings = get_settings()
     reset_sandbox(settings.seed_workspace, settings.runtime_workspace, settings.outbox_path)

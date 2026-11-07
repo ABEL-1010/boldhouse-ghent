@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     sentinel_host: str = "127.0.0.1"
     sentinel_port: int = 8000
     fake_web_port: int = 8001
+    # Keep below the agent's 120 s gateway timeout (agent/executors.py).
+    decision_timeout_seconds: float = Field(default=90.0, gt=0, lt=120)
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 
     sandbox_dir: Path = REPO_ROOT / "sandbox"

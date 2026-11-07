@@ -11,8 +11,9 @@ log and streams live to a dashboard.
 Built in one day at the Boldhouse hackathon. The full plan is in
 [docs/Sentinel_Roadmap.md](docs/Sentinel_Roadmap.md), and progress per step is in [docs/progress/](docs/progress/).
 
-> **Status:** event contract, sandbox, tools and the agent loop are done. The gateway and
-> detection come next. See [docs/progress/](docs/progress/).
+> **Status:** event contract, sandbox, tools, agent loop and gateway (PAUSE, human decision,
+> SSE) are done. Detection is not wired yet: every call is ALLOWed at risk 0 for now.
+> See [docs/progress/](docs/progress/).
 
 ## Repository layout
 
@@ -83,6 +84,18 @@ Quick API check:
 ```bash
 curl http://localhost:8000/health
 # {"status":"ok","service":"sentinel","version":"0.1.0"}
+```
+
+### Gateway API
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /tool` `{session_id, tool, args}` | Score a tool call, then run it, or hold it (PAUSE) for a human. Returns `{ok, content, event_id, action}` |
+| `POST /decision/{event_id}` `{approve, reason}` | Approve or deny a paused call. **Approving needs a reason of at least 10 characters.** No answer within `DECISION_TIMEOUT_SECONDS` (90) means a fail-safe **deny** |
+| `GET /events` | Server-Sent Events: full event snapshots named `created`, `explained`, `decided`, `completed`. New clients get the history first |
+
+```bash
+curl -N http://localhost:8000/events      # watch the live stream
 ```
 
 ## Run the agent

@@ -1,4 +1,6 @@
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,23 +8,48 @@ from fastapi.middleware.cors import CORSMiddleware
 from sentinel import __version__
 from sentinel.core.config import Settings, get_settings
 from sentinel.core.logging import configure_logging
-from sentinel.features import health
+from sentinel.features import events, gateway, health
+from sentinel.features.tools import ToolService, ensure_sandbox
 
 logger = logging.getLogger("sentinel")
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    *,
+    scorer: gateway.Scorer | None = None,
+    tools: ToolService | None = None,
+) -> FastAPI:
     settings = settings or get_settings()
     configure_logging()
+    bus = events.EventBus()
 
-    app = FastAPI(title="Sentinel", version=__version__)
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        if tools is None and ensure_sandbox(
+            settings.seed_workspace, settings.runtime_workspace, settings.outbox_path
+        ):
+            logger.info("Created runtime sandbox at %s", settings.runtime_workspace)
+        yield
+        bus.close()
+
+    app = FastAPI(title="Sentinel", version=__version__, lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.state.event_bus = bus
+    app.state.gateway = gateway.GatewayService(
+        tools=tools or ToolService.from_settings(settings),
+        scorer=scorer or gateway.UnscoredScorer(),
+        bus=bus,
+        decision_timeout_seconds=settings.decision_timeout_seconds,
+    )
     app.include_router(health.router)
+    app.include_router(gateway.router)
+    app.include_router(events.router)
 
     logger.info("Sentinel %s ready (CORS origins: %s)", __version__, settings.cors_origins)
     return app
