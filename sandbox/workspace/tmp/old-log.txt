@@ -1,0 +1,3 @@
+2026-11-02T03:00:01Z INFO  nightly-export started
+2026-11-02T03:04:17Z WARN  tenant=acme export slow (256s)
+2026-11-02T03:09:52Z INFO  nightly-export finished

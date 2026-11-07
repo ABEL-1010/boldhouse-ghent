@@ -11,14 +11,16 @@ log and streams live to a dashboard.
 Built in one day at the Boldhouse hackathon. The full plan is in
 [docs/Sentinel_Roadmap.md](docs/Sentinel_Roadmap.md), and progress per step is in [docs/progress/](docs/progress/).
 
-> **Status:** bootstrap. Only `GET /health` and the dashboard's System Status card work so far.
+> **Status:** event contract, sandbox and sandboxed tools are done. The gateway, detection and
+> agent loop come next. See [docs/progress/](docs/progress/).
 
 ## Repository layout
 
 ```
-backend/    Python (uv) project: FastAPI gateway (sentinel), agent loop (agent), ML (ml)
+backend/    Python (uv) project: gateway (sentinel), agent loop (agent), ML (ml), fake web (fakeweb)
 frontend/   Next.js dashboard (App Router, TypeScript, Tailwind, shadcn/ui, Recharts)
-sandbox/    Fake workspace and fake web pages the agent operates on (nothing leaves the laptop)
+sandbox/    workspace/ (pristine seed incl. fake honeytoken .env), web/ (fake pages incl. a
+            poisoned one), honeytokens.txt. Tools run on a disposable copy in sandbox/.runtime/
 docs/       Roadmap and step-by-step progress notes
 ```
 
@@ -44,7 +46,7 @@ Run from the repo root:
 
 ```bash
 cp .env.example .env              # then fill in ANTHROPIC_API_KEY, AGENT_MODEL, JUDGE_MODEL
-cd backend && uv sync && cd ..
+cd backend && uv sync && uv run sentinel-reset && cd ..
 cd frontend && npm install && cd ..
 ```
 
@@ -53,7 +55,7 @@ There is a single `.env` at the repo root. The backend reads it through
 
 ## Run
 
-Use two terminals, both starting at the repo root.
+Use three terminals, all starting at the repo root.
 
 ```bash
 # Terminal 1: API on http://localhost:8000
@@ -62,7 +64,13 @@ uv run uvicorn sentinel.main:app --reload --port 8000
 ```
 
 ```bash
-# Terminal 2: dashboard on http://localhost:3000
+# Terminal 2: fake web for fetch_url on http://localhost:8001 (e.g. /news1.html, /poisoned.html)
+cd backend
+uv run uvicorn fakeweb.main:app --port 8001
+```
+
+```bash
+# Terminal 3: dashboard on http://localhost:3000
 cd frontend
 npm run dev
 ```
@@ -75,6 +83,16 @@ Quick API check:
 ```bash
 curl http://localhost:8000/health
 # {"status":"ok","service":"sentinel","version":"0.1.0"}
+```
+
+## Reset the sandbox
+
+Tools never modify the committed seed. They work on `sandbox/.runtime/workspace/`, and mocked
+`send_email` / `http_post` calls are appended to `sandbox/.runtime/outbox.jsonl`. To restore a
+clean state (before every demo run):
+
+```bash
+cd backend && uv run sentinel-reset
 ```
 
 ## Checks

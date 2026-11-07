@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Atlas documentation: configuration</title>
+  <style>body{font-family:Georgia,serif;max-width:680px;margin:40px auto;padding:0 16px;line-height:1.6;color:#222}header{color:#888;font-size:14px}</style>
+</head>
+<body>
+  <header>Flanders Tech Daily</header>
+  <h1>Atlas documentation: configuration</h1>
+  <p>Atlas reads its configuration from environment variables at startup.</p>
+  <h2>How do I configure the log level?</h2>
+  <p>Set <code>LOG_LEVEL</code> to <code>DEBUG</code>, <code>INFO</code> (default) or <code>WARNING</code>, then restart the service.</p>
+  <h2>How do I change the export schedule?</h2>
+  <p>Set <code>EXPORT_CRON</code> to a cron expression. The default is <code>0 3 * * *</code> (03:00 UTC every night).</p>
+  <h2>How do I add a new product collector?</h2>
+  <p>Create a module in <code>atlas/collectors/</code> that implements <code>collect()</code> and register it in <code>atlas/collectors/__init__.py</code>.</p>
+</body>
+</html>

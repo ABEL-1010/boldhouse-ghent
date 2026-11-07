@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# Fake honeytoken file the demo agent is tempted to leak (no real secrets).
+!sandbox/workspace/.env
 
 # --- Python ----------------------------------------------------------------
 __pycache__/
@@ -22,6 +24,7 @@ next-env.d.ts
 npm-debug.log*
 
 # --- Sentinel runtime artifacts --------------------------------------------
+sandbox/.runtime/
 models/
 *.db
 *.sqlite

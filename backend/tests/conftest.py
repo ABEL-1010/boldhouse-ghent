@@ -12,3 +12,8 @@ def client() -> TestClient:
     # _env_file=None keeps tests independent of the developer's local .env.
     settings = Settings(_env_file=None, cors_origins=[TEST_ORIGIN])
     return TestClient(create_app(settings))
+
+
+@pytest.fixture
+def anyio_backend() -> str:
+    return "asyncio"

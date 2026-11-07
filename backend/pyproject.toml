@@ -17,6 +17,9 @@ dependencies = [
     "uvicorn[standard]>=0.54.0",
 ]
 
+[project.scripts]
+sentinel-reset = "sentinel.features.tools.reset:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -25,7 +28,7 @@ build-backend = "hatchling.build"
 path = "src/sentinel/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sentinel", "src/agent", "src/ml"]
+packages = ["src/sentinel", "src/agent", "src/ml", "src/fakeweb"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

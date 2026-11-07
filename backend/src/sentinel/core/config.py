@@ -26,6 +26,30 @@ class Settings(BaseSettings):
     fake_web_port: int = 8001
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 
+    sandbox_dir: Path = REPO_ROOT / "sandbox"
+
+    @property
+    def seed_workspace(self) -> Path:
+        """Pristine, committed workspace. Never modified by tools."""
+        return self.sandbox_dir / "workspace"
+
+    @property
+    def runtime_workspace(self) -> Path:
+        """Disposable copy of the seed that tools actually operate on."""
+        return self.sandbox_dir / ".runtime" / "workspace"
+
+    @property
+    def outbox_path(self) -> Path:
+        return self.sandbox_dir / ".runtime" / "outbox.jsonl"
+
+    @property
+    def web_dir(self) -> Path:
+        return self.sandbox_dir / "web"
+
+    @property
+    def fake_web_base_url(self) -> str:
+        return f"http://localhost:{self.fake_web_port}"
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def split_comma_separated(cls, value: object) -> object:

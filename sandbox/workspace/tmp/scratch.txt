@@ -1,0 +1,2 @@
+scratch: compare export timings before and after the index change
+before: 41s, after: 12s
