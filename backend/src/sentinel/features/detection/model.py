@@ -59,6 +59,10 @@ class DetectionModel:
         return calibrated_risk(self.anomaly_score(features), self.forest_reference)
 
     def markov_risk(self, previous: str, token: str) -> float:
+        # A token normal traffic never produced (e.g. list_dir:S) is maximally surprising. Without
+        # this, a never-seen *previous* state falls back to a uniform guess and scores low.
+        if token not in self.markov.vocabulary:
+            return 1.0
         return calibrated_risk(self.markov.surprise(previous, token), self.markov_reference)
 
     def save(self, path: Path) -> None:

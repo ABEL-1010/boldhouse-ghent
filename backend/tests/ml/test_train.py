@@ -173,6 +173,13 @@ def test_unseen_indicator_maxes_ml_risk(model: DetectionModel) -> None:
     assert model.ml_risk(recon) == 1.0
 
 
+def test_tokens_never_seen_in_training_max_markov_risk(model: DetectionModel) -> None:
+    assert "list_dir:S" not in model.markov.vocabulary
+
+    assert model.markov_risk("list_dir:S", "list_dir:S") == 1.0
+    assert model.markov_risk("<start>", "list_dir:N") == 0.0
+
+
 def test_recon_a6_is_caught_by_ml_alone(model: DetectionModel, tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     reset_sandbox(SETTINGS.seed_workspace, workspace, tmp_path / "outbox.jsonl")

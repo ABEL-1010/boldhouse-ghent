@@ -20,6 +20,7 @@ dependencies = [
 [project.scripts]
 sentinel-reset = "sentinel.features.tools.reset:main"
 sentinel-agent = "agent.cli:main"
+sentinel-redteam = "agent.redteam_cli:main"
 sentinel-traces = "ml.generate_traces:main"
 sentinel-train = "ml.train:main"
 

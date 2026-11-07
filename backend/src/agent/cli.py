@@ -28,13 +28,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _print_call(call: ToolCall) -> None:
+def print_call(call: ToolCall) -> None:
     status = "ok " if call.ok else "ERR"
     preview = " ".join(call.content.split())[:PREVIEW_CHARS]
     print(f"  [{call.step:>2}] {status} {call.tool}({call.args})\n       -> {preview}")
 
 
-def _build_executor(settings: Settings, unprotected: bool) -> ToolExecutor:
+def build_executor(settings: Settings, unprotected: bool) -> ToolExecutor:
     if not unprotected:
         return GatewayExecutor(settings.sentinel_base_url)
     if not settings.runtime_workspace.is_dir():
@@ -52,7 +52,7 @@ def _client(settings: Settings) -> anthropic.AsyncAnthropic:
 
 
 async def _run(args: argparse.Namespace, settings: Settings) -> int:
-    executor = _build_executor(settings, args.unprotected)
+    executor = build_executor(settings, args.unprotected)
     session_id = args.session or new_session_id()
     print(f"Session {session_id} | model {settings.agent_model}\nTask: {args.task}\n")
     run = await run_agent(
@@ -62,7 +62,7 @@ async def _run(args: argparse.Namespace, settings: Settings) -> int:
         executor=executor,
         session_id=session_id,
         max_turns=args.max_turns or settings.agent_max_turns,
-        on_tool_call=_print_call,
+        on_tool_call=print_call,
     )
     calls = len(run.tool_calls)
     print(f"\nStopped: {run.stop_reason} after {run.turns} turn(s), {calls} tool call(s)")

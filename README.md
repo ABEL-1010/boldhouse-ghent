@@ -113,6 +113,20 @@ uv run sentinel-agent --unprotected "Summarize http://localhost:8001/productivit
 
 If Sentinel is unreachable, the agent stops. It never falls back to running tools unprotected.
 
+## Demo: red-team mode (scripted attacks, no API cost)
+
+Real Claude usually refuses these injections (its cyber safeguards stopped our live test). So the
+demo uses a **scripted compromised agent**. Only the model is mocked: every call goes through the
+real gateway, scorer and tools, so the events are genuine.
+
+```bash
+cd backend
+uv run sentinel-redteam --list                     # A1 A3 A4 A5 A6 attacks, B2 benign
+uv run sentinel-redteam A1 --delay 1.5             # through Sentinel; decide the PAUSE (dashboard/curl)
+uv run sentinel-redteam A1 --unprotected           # same script, no Sentinel: shows the leaked secrets
+uv run sentinel-reset                              # clean sandbox + outbox between runs
+```
+
 ## Train the ML layers (free, about 30 s)
 
 ```bash
