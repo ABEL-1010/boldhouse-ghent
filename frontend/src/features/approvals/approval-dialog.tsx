@@ -31,7 +31,7 @@ export function ApprovalDialog({ event, waiting }: ApprovalDialogProps) {
     // No dismissal without a decision: the agent is frozen until a human (or the fail-safe) decides.
     <Dialog open={event !== undefined} onOpenChange={() => undefined}>
       {event && (
-        <DialogContent className="sm:max-w-xl" showCloseButton={false}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl" showCloseButton={false}>
           <DecisionForm key={event.event_id} event={event} waiting={waiting} />
         </DialogContent>
       )}

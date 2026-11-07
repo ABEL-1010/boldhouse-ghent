@@ -83,6 +83,9 @@ Open http://localhost:3000, the **live dashboard**:
 - **Signal breakdown**: policy rules, taint, ML anomaly and sequence model for the selected call.
 - **Approval dialog**: opens on every PAUSE. **Approve once** needs a written reason (at least 10
   characters); **Deny** blocks the action. No answer means a fail-safe deny.
+- **Claude's assessment**: on FLAG/PAUSE, Claude Haiku (`JUDGE_MODEL`) explains the risk in plain
+  language within a few seconds. It is **advisory only**: it never approves or changes a decision, and
+  the agent's arguments are fenced as untrusted data so an injection cannot steer it.
 
 Quick API check:
 

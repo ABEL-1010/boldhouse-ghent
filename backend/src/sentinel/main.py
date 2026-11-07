@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sentinel import __version__
 from sentinel.core.config import Settings, get_settings
 from sentinel.core.logging import configure_logging
-from sentinel.features import detection, events, gateway, health
+from sentinel.features import detection, events, gateway, health, judge
 from sentinel.features.tools import ToolService, ensure_sandbox
 
 logger = logging.getLogger("sentinel")
@@ -28,18 +28,20 @@ def create_app(
     *,
     scorer: detection.Scorer | None = None,
     tools: ToolService | None = None,
+    explainer: judge.Judge | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging()
     bus = events.EventBus()
 
     @asynccontextmanager
-    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    async def lifespan(running_app: FastAPI) -> AsyncIterator[None]:
         if tools is None and ensure_sandbox(
             settings.seed_workspace, settings.runtime_workspace, settings.outbox_path
         ):
             logger.info("Created runtime sandbox at %s", settings.runtime_workspace)
         yield
+        await running_app.state.gateway.aclose()
         bus.close()
 
     app = FastAPI(title="Sentinel", version=__version__, lifespan=lifespan)
@@ -58,6 +60,8 @@ def create_app(
         bus=bus,
         decision_timeout_seconds=settings.decision_timeout_seconds,
         new_context=lambda: detection.SessionContext(tool_service.workspace, allowed_domains),
+        # Without JUDGE_MODEL (e.g. in tests: Settings(_env_file=None)) there is no judge.
+        judge=explainer or judge.build_judge(settings),
     )
     app.include_router(health.router)
     app.include_router(gateway.router)
