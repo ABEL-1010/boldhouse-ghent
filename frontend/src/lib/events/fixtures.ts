@@ -1,8 +1,8 @@
 import type { SentinelEvent } from "./types";
 
 /**
- * Sample events covering ALLOW, FLAG and PAUSE, for building dashboard features before the
- * live gateway exists. The PAUSE event is the roadmap's contract example (docs/contract/event.example.json).
+ * Sample events covering ALLOW, FLAG and PAUSE, used by the frontend unit tests (and handy for
+ * UI work without a running backend). The PAUSE event is the roadmap contract example.
  */
 export const sampleEvents = [
   {

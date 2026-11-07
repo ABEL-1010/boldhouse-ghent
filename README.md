@@ -76,8 +76,13 @@ cd frontend
 npm run dev
 ```
 
-Open http://localhost:3000. The **System Status** card shows "Backend: connected" in green, or
-"disconnected" in red. It re-checks every 5 seconds.
+Open http://localhost:3000, the **live dashboard**:
+- **Timeline**: every tool call, green (allowed) / amber (flagged) / red (paused), with its outcome
+  and who decided it.
+- **Risk per step**: a chart with the Flag (0.5) and Pause (0.8) thresholds.
+- **Signal breakdown**: policy rules, taint, ML anomaly and sequence model for the selected call.
+- **Approval dialog**: opens on every PAUSE. **Approve once** needs a written reason (at least 10
+  characters); **Deny** blocks the action. No answer means a fail-safe deny.
 
 Quick API check:
 
@@ -122,7 +127,7 @@ real gateway, scorer and tools, so the events are genuine.
 ```bash
 cd backend
 uv run sentinel-redteam --list                     # A1 A3 A4 A5 A6 attacks, B2 benign
-uv run sentinel-redteam A1 --delay 1.5             # through Sentinel; decide the PAUSE (dashboard/curl)
+uv run sentinel-redteam A1 --delay 1.5             # through Sentinel; decide the PAUSE in the dashboard
 uv run sentinel-redteam A1 --unprotected           # same script, no Sentinel: shows the leaked secrets
 uv run sentinel-reset                              # clean sandbox + outbox between runs
 ```
@@ -159,5 +164,7 @@ uv run ruff format .   # format
 ```bash
 cd frontend
 npm run lint
+npm test            # Vitest: event store + guards
 npm run build
+npm run e2e         # real-browser click-through (needs servers + a red-team run; see the script header)
 ```
