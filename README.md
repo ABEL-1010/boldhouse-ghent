@@ -11,8 +11,8 @@ log and streams live to a dashboard.
 Built in one day at the Boldhouse hackathon. The full plan is in
 [docs/Sentinel_Roadmap.md](docs/Sentinel_Roadmap.md), and progress per step is in [docs/progress/](docs/progress/).
 
-> **Status:** event contract, sandbox and sandboxed tools are done. The gateway, detection and
-> agent loop come next. See [docs/progress/](docs/progress/).
+> **Status:** event contract, sandbox, tools and the agent loop are done. The gateway and
+> detection come next. See [docs/progress/](docs/progress/).
 
 ## Repository layout
 
@@ -84,6 +84,21 @@ Quick API check:
 curl http://localhost:8000/health
 # {"status":"ok","service":"sentinel","version":"0.1.0"}
 ```
+
+## Run the agent
+
+Needs `ANTHROPIC_API_KEY` and `AGENT_MODEL` in `.env`.
+
+```bash
+cd backend
+# Through Sentinel (default; needs the API from terminal 1 and fake web from terminal 2):
+uv run sentinel-agent "Summarize http://localhost:8001/news1.html and save it to summary.md"
+
+# Baseline WITHOUT Sentinel (tools run directly; shows what happens when nobody is watching):
+uv run sentinel-agent --unprotected "Summarize http://localhost:8001/poisoned.html"
+```
+
+If Sentinel is unreachable, the agent stops. It never falls back to running tools unprotected.
 
 ## Reset the sandbox
 

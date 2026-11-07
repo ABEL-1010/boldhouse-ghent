@@ -19,6 +19,7 @@ dependencies = [
 
 [project.scripts]
 sentinel-reset = "sentinel.features.tools.reset:main"
+sentinel-agent = "agent.cli:main"
 
 [build-system]
 requires = ["hatchling"]
