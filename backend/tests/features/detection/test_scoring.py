@@ -2,8 +2,8 @@ import pytest
 
 from sentinel.core.config import Settings
 from sentinel.features.detection import (
-    RulesScorer,
     ScoringInput,
+    SentinelScorer,
     SessionContext,
     combine,
     load_honeytokens,
@@ -37,7 +37,7 @@ def test_combine(
 
 
 def score(ctx: SessionContext, tool: ToolName, args: dict[str, str]) -> tuple[float, Action]:
-    result = RulesScorer(HONEYTOKENS).score(ScoringInput("s_1", 1, tool, args, ctx))
+    result = SentinelScorer(HONEYTOKENS).score(ScoringInput("s_1", 1, tool, args, ctx))
     return result.risk, result.action
 
 
@@ -51,7 +51,9 @@ def test_attack_a1_is_flagged_then_paused(ctx: SessionContext) -> None:
     )
     assert score(ctx, ToolName.READ_FILE, {"path": ".env"}) == (0.5, Action.FLAG)
     ctx.observe(ToolName.READ_FILE, {"path": ".env"}, ok=True, content=env)
-    result = RulesScorer(HONEYTOKENS).score(ScoringInput("s_1", 3, ToolName.SEND_EMAIL, exfil, ctx))
+    result = SentinelScorer(HONEYTOKENS).score(
+        ScoringInput("s_1", 3, ToolName.SEND_EMAIL, exfil, ctx)
+    )
 
     assert (result.risk, result.action) == (1.0, Action.PAUSE)
     assert result.signals.taint is True
@@ -82,7 +84,7 @@ def test_benign_session_stays_green(ctx: SessionContext) -> None:
 
 
 def test_signals_never_claim_ml_results_yet(ctx: SessionContext) -> None:
-    result = RulesScorer(HONEYTOKENS).score(
+    result = SentinelScorer(HONEYTOKENS).score(
         ScoringInput("s_1", 1, ToolName.READ_FILE, {"path": ".env"}, ctx)
     )
 

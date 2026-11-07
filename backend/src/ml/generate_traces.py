@@ -50,7 +50,7 @@ async def run_session(
             TraceRecord(
                 session_id=session_id,
                 task=task,
-                split=split_for(index),
+                split=split_for(session_id),
                 step=step,
                 tool=tool,
                 args=args,
@@ -80,7 +80,7 @@ async def generate(sessions: int, seed: int, settings: Settings) -> list[TraceRe
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="sentinel-traces", description=__doc__)
-    parser.add_argument("--sessions", type=int, default=200)
+    parser.add_argument("--sessions", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--out", type=Path, help="Default: models/traces.jsonl")
     args = parser.parse_args(argv)

@@ -6,6 +6,8 @@ from typing import Any, Protocol
 
 from sentinel.features.detection.context import SessionContext
 from sentinel.features.detection.features import extract_features
+from sentinel.features.detection.markov import token_from_features
+from sentinel.features.detection.model import DetectionModel
 from sentinel.features.detection.patterns import OUTBOUND_TOOLS
 from sentinel.features.detection.rules import evaluate_rules
 from sentinel.features.detection.taint import NO_TAINT, check_outbound
@@ -61,15 +63,24 @@ def combine(
     return risk, Action.ALLOW
 
 
-class RulesScorer:
-    """Rules + taint + honeytokens. The ML layers (Isolation Forest, Markov) join in Step 7."""
+class SentinelScorer:
+    """Rules + taint + honeytokens, plus the ML layers (Isolation Forest, Markov) when trained."""
 
-    def __init__(self, honeytokens: frozenset[str]) -> None:
+    def __init__(self, honeytokens: frozenset[str], model: DetectionModel | None = None) -> None:
         self._honeytokens = honeytokens
-        logger.info(
-            "Scoring with rules + taint (%d honeytokens); ML layers not trained yet.",
-            len(honeytokens),
-        )
+        self._model = model
+        if model is None:
+            logger.warning(
+                "No ML model loaded: scoring with rules + taint only (%d honeytokens). "
+                "Train one with: uv run sentinel-traces && uv run sentinel-train",
+                len(honeytokens),
+            )
+        else:
+            logger.info(
+                "Scoring with rules + taint (%d honeytokens) + ML (%s).",
+                len(honeytokens),
+                model.info.get("summary", "trained model"),
+            )
 
     def score(self, call: ScoringInput) -> Score:
         ctx = call.context
@@ -85,10 +96,15 @@ class RulesScorer:
             else NO_TAINT
         )
         rules = evaluate_rules(call.tool, call.args, features, taint)
-        risk, action = combine(rules, taint.tainted, ml_risk=0.0, markov_risk=0.0)
+        ml_risk = markov_risk = 0.0
+        if self._model is not None:
+            ml_risk = round(self._model.ml_risk(features), 2)
+            token = token_from_features(call.tool, features)
+            markov_risk = round(self._model.markov_risk(ctx.last_token, token), 2)
+        risk, action = combine(rules, taint.tainted, ml_risk, markov_risk)
         if action is not Action.ALLOW:
             logger.info(
-                "%s %s step %d: %s risk=%.2f rules=%s taint=%s",
+                "%s %s step %d: %s risk=%.2f rules=%s taint=%s ml=%.2f markov=%.2f",
                 call.session_id,
                 call.tool.value,
                 call.step,
@@ -96,9 +112,16 @@ class RulesScorer:
                 risk,
                 [rule.value for rule in rules],
                 list(taint.evidence),
+                ml_risk,
+                markov_risk,
             )
         return Score(
-            signals=Signals(rules=rules, taint=taint.tainted or taint.honeytoken),
+            signals=Signals(
+                rules=rules,
+                taint=taint.tainted or taint.honeytoken,
+                ml_risk=ml_risk,
+                markov_risk=markov_risk,
+            ),
             risk=risk,
             action=action,
         )

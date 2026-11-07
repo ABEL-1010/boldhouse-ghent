@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     sentinel_allowed_domains: Annotated[list[str], NoDecode] = ["ourcompany.be"]
 
     sandbox_dir: Path = REPO_ROOT / "sandbox"
+    # Trained ML layers and their benign training traces (both gitignored, both free to rebuild:
+    # `uv run sentinel-traces && uv run sentinel-train`). Missing model -> rules + taint only.
+    model_path: Path = REPO_ROOT / "models" / "sentinel.joblib"
+    traces_path: Path = REPO_ROOT / "models" / "traces.jsonl"
 
     @property
     def seed_workspace(self) -> Path:
@@ -46,11 +50,6 @@ class Settings(BaseSettings):
     @property
     def outbox_path(self) -> Path:
         return self.sandbox_dir / ".runtime" / "outbox.jsonl"
-
-    @property
-    def traces_path(self) -> Path:
-        """Benign training traces (gitignored; regenerate with `uv run sentinel-traces`)."""
-        return REPO_ROOT / "models" / "traces.jsonl"
 
     @property
     def honeytokens_path(self) -> Path:

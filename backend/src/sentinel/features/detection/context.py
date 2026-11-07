@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from sentinel.features.detection.patterns import SENSITIVE_TARGET
+from sentinel.features.detection.markov import START_TOKEN, call_token
+from sentinel.features.detection.patterns import OUTBOUND_TOOLS, SENSITIVE_TARGET
 from sentinel.features.detection.taint import taint_from_content
 from sentinel.features.events import ToolName
 from sentinel.features.tools import file_exists_in_workspace
@@ -35,6 +36,7 @@ class SessionContext:
     sensitive_reads: int = 0
     tainted_lines: set[str] = field(default_factory=set)
     secret_fragments: set[str] = field(default_factory=set)
+    last_token: str = START_TOKEN
 
     def is_allowlisted(self, target: str) -> bool:
         domain = destination_domain(target)
@@ -48,7 +50,13 @@ class SessionContext:
     def observe(self, tool: ToolName, args: dict[str, Any], *, ok: bool, content: str) -> None:
         """Record a finished call. Only a successful sensitive read counts: no data, no risk."""
         self.steps_so_far += 1
-        if tool is ToolName.READ_FILE and ok and SENSITIVE_TARGET.search(call_target(args)):
+        sensitive_target = bool(SENSITIVE_TARGET.search(call_target(args)))
+        # Same definition as markov.token_from_features, from the state *before* this call.
+        self.last_token = call_token(
+            tool,
+            sensitive=sensitive_target or (tool in OUTBOUND_TOOLS and self.sensitive_reads > 0),
+        )
+        if tool is ToolName.READ_FILE and ok and sensitive_target:
             self.sensitive_reads += 1
             lines, fragments = taint_from_content(content)
             self.tainted_lines |= lines

@@ -47,10 +47,18 @@ def test_tools_really_ran(records: list[TraceRecord]) -> None:
     assert sum(not r.ok for r in records) < len(records) * 0.1  # only occasional stumbles
 
 
-def test_twenty_percent_of_sessions_are_held_out() -> None:
-    splits = Counter(split_for(index) for index in range(100))
+def test_about_twenty_percent_of_sessions_are_held_out() -> None:
+    splits = Counter(split_for(f"s_sim{index:04d}") for index in range(1000))
 
-    assert splits == {"train": 80, "holdout": 20}
+    assert 0.17 < splits["holdout"] / 1000 < 0.23
+
+
+def test_holdout_covers_every_task() -> None:
+    # Regression: an index-based split held out only 3 of the 15 round-robin task types.
+    records = asyncio.run(generate(sessions=200, seed=7, settings=SETTINGS))
+
+    holdout_tasks = {r.task for r in records if r.split == "holdout"}
+    assert holdout_tasks == set(BENIGN_PLANS)
 
 
 def test_generation_is_deterministic() -> None:

@@ -1,6 +1,7 @@
 """Trace records: one JSON line per tool call, with the features Sentinel computed before it ran."""
 
 import json
+import zlib
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -10,11 +11,17 @@ from sentinel.features.detection import Score, ScoringInput, extract_features
 from sentinel.features.events import Action, Signals
 
 Split = Literal["train", "holdout"]
-HOLDOUT_EVERY = 5  # every 5th session -> 20% held out for calibration
+HOLDOUT_BUCKETS = 5  # ~1 in 5 sessions (20%) held out for calibration
 
 
-def split_for(session_index: int) -> Split:
-    return "holdout" if session_index % HOLDOUT_EVERY == HOLDOUT_EVERY - 1 else "train"
+def split_for(session_id: str) -> Split:
+    """Stable pseudo-random split by session id.
+
+    Must not depend on the task: plans are assigned round-robin, so "every 5th session" would
+    hold out only a few task types and calibration would never see the others.
+    """
+    bucket = zlib.crc32(session_id.encode()) % HOLDOUT_BUCKETS
+    return "holdout" if bucket == 0 else "train"
 
 
 @dataclass(frozen=True)

@@ -1,7 +1,7 @@
 """Roadmap Milestone 1: agent -> Sentinel -> events, end to end, with the real scorer.
 
 A scripted 'compromised' model follows the poisoned page. Everything else is real: the agent
-loop, GatewayExecutor, the gateway with RulesScorer, the sandboxed tools and the event bus.
+loop, GatewayExecutor, the gateway with SentinelScorer, the sandboxed tools and the event bus.
 Compare tests/agent/test_unprotected_baseline.py, where the same script leaks every secret.
 """
 
@@ -15,6 +15,7 @@ from anthropic.types import Message
 
 from agent import AgentRun, GatewayExecutor, run_agent
 from sentinel.core.config import Settings
+from sentinel.features.detection import SentinelScorer, load_honeytokens
 from sentinel.features.events import Action, EventBus, RuleId, StreamEventType
 from sentinel.features.tools import ToolService, reset_sandbox
 from sentinel.main import create_app
@@ -77,7 +78,10 @@ async def run_attack(
     poisoned = (SETTINGS.web_dir / "poisoned.html").read_text(encoding="utf-8")
     web = httpx.MockTransport(lambda request: httpx.Response(200, text=poisoned))
     tools = ToolService(workspace, outbox, "http://localhost:8001", http_transport=web)
-    app = create_app(Settings(_env_file=None, decision_timeout_seconds=0.2), tools=tools)
+    # Rules + taint only, explicitly: a locally trained model must not change this test.
+    scorer = SentinelScorer(load_honeytokens(SETTINGS.honeytokens_path))
+    settings = Settings(_env_file=None, decision_timeout_seconds=0.2)
+    app = create_app(settings, scorer=scorer, tools=tools)
     bus: EventBus = app.state.event_bus
     executor = GatewayExecutor("http://sentinel", transport=httpx.ASGITransport(app=app))
     model = CompromisedModel()

@@ -14,6 +14,15 @@ from sentinel.features.tools import ToolService, ensure_sandbox
 logger = logging.getLogger("sentinel")
 
 
+def _default_scorer(settings: Settings) -> detection.SentinelScorer:
+    model = (
+        detection.DetectionModel.load(settings.model_path)
+        if settings.model_path.is_file()
+        else None
+    )
+    return detection.SentinelScorer(detection.load_honeytokens(settings.honeytokens_path), model)
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -45,8 +54,7 @@ def create_app(
     app.state.event_bus = bus
     app.state.gateway = gateway.GatewayService(
         tools=tool_service,
-        scorer=scorer
-        or detection.RulesScorer(detection.load_honeytokens(settings.honeytokens_path)),
+        scorer=scorer or _default_scorer(settings),
         bus=bus,
         decision_timeout_seconds=settings.decision_timeout_seconds,
         new_context=lambda: detection.SessionContext(tool_service.workspace, allowed_domains),

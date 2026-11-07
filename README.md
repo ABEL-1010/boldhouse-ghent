@@ -11,8 +11,8 @@ log and streams live to a dashboard.
 Built in one day at the Boldhouse hackathon. The full plan is in
 [docs/Sentinel_Roadmap.md](docs/Sentinel_Roadmap.md), and progress per step is in [docs/progress/](docs/progress/).
 
-> **Status:** Milestone 1 reached. The agent goes through Sentinel, and policy rules + taint tracking +
-> honeytokens score every call (FLAG / PAUSE with a human decision). The ML layers come next.
+> **Status:** Milestone 1 reached, plus the ML layers. Every call is scored by policy rules, taint
+> tracking, honeytokens, an Isolation Forest and a Markov sequence model (FLAG / PAUSE with a human decision).
 > See [docs/progress/](docs/progress/).
 
 ## Repository layout
@@ -47,7 +47,7 @@ Run from the repo root:
 
 ```bash
 cp .env.example .env              # then fill in ANTHROPIC_API_KEY, AGENT_MODEL, JUDGE_MODEL
-cd backend && uv sync && uv run sentinel-reset && cd ..
+cd backend && uv sync && uv run sentinel-reset && uv run sentinel-traces && uv run sentinel-train && cd ..
 cd frontend && npm install && cd ..
 ```
 
@@ -112,6 +112,16 @@ uv run sentinel-agent --unprotected "Summarize http://localhost:8001/poisoned.ht
 ```
 
 If Sentinel is unreachable, the agent stops. It never falls back to running tools unprotected.
+
+## Train the ML layers (free, about 30 s)
+
+```bash
+cd backend
+uv run sentinel-traces    # 1000 simulated benign sessions → models/traces.jsonl (no API calls)
+uv run sentinel-train     # Isolation Forest + Markov → models/sentinel.joblib, prints the alert budget
+```
+
+Restart the API afterwards. Without a model file, Sentinel runs with rules + taint only and logs a warning.
 
 ## Reset the sandbox
 
